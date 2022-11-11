@@ -10,9 +10,11 @@ from django.template.loader import get_template
 from django.template import Context
 from django.http import HttpResponse
 from .models import *
+import re
 def index(request):
 
 	input_value = request.POST['input_value']
+	# input_value = sorted(input_value, reverse=True)
 	search_value = request.POST['search_value']
 	# input_db = Value(input_value='input_value', search_value='search_value')
 	# is_existing_value = Value.objects.all().delete()
@@ -25,7 +27,15 @@ def index(request):
 		input_db = Value(input_value=input_value, search_value=search_value)
 		input_db.save()
 	# input_db.save()
-	print(Value.objects.filter().values().first()['input_value'])
+	numbers = Value.objects.filter().values().first()['input_value']
+	numbers = re.findall(r'\d+', numbers)
+	print(numbers)
+	if (search_value in numbers):
+		print('True')
+		messages.success(request, f'found')
+	else:
+		print('False')
+		messages.info(request, f'not found')
 	print(Value.objects.all())
 	print(input_value)
 
