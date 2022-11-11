@@ -8,38 +8,49 @@ from django.core.mail import send_mail
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import get_template
 from django.template import Context
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
+from rest_framework.response import Response
+from rest_framework import status
 from .models import *
 import re
+
 def index(request):
+	# if request.method == 'POST':
+	try:
+		input_value = request.POST['input_value']
+		search_value = request.POST['search_value']
 
-	input_value = request.POST['input_value']
-	# input_value = sorted(input_value, reverse=True)
-	search_value = request.POST['search_value']
-	# input_db = Value(input_value='input_value', search_value='search_value')
-	# is_existing_value = Value.objects.all().delete()
-	is_existing_value = Value.objects.all().exists()
-	if is_existing_value:
-		Value.objects.update(input_value = input_value, search_value = search_value)
-	# if is_existing_value:
-	# 	input_db.update(input_value = 'input_value', search_value = 'search_value')
-	else:
-		input_db = Value(input_value=input_value, search_value=search_value)
+		# is_existing_value = Value.objects.all().exists()
+		# if is_existing_value:
+		# 	Value.objects.update(input_value = input_value, search_value = search_value, user_id = request.user.id)
+
+		# else:
+		# 	input_db = Value(input_value=input_value, search_value=search_value, user_id=request.user.id)
+		# 	input_db.save()
+		input_db = Value(input_value=input_value, search_value=search_value, user_id=request.user.id)
 		input_db.save()
-	# input_db.save()
-	numbers = Value.objects.filter().values().first()['input_value']
-	numbers = re.findall(r'\d+', numbers)
-	print(numbers)
-	if (search_value in numbers):
-		print('True')
-		messages.success(request, f'found')
-	else:
-		print('False')
-		messages.info(request, f'not found')
-	print(Value.objects.all())
-	print(input_value)
+		test = Value.objects.filter().order_by('-created_at')[0].input_value
+		print('test:', test)
+		# numbers = Value.objects.filter().values().first()['input_value']
+		# numbers = Value.objects.filter().order_by('-data')[0]
+		numbers = Value.objects.filter().order_by('-created_at')[0].input_value
+		numbers = re.findall(r'\d+', numbers)
+		print(numbers)
+		if (search_value in numbers):
+			print('True')
+			messages.success(request, f'found')
+		else:
+			print('False')
+			messages.info(request, f'not found')
+		print(Value.objects.all())
+		print(Value.objects.filter().values().first()['user_id'])
+		print(request.user.id)
 
-	return render(request, 'user/index.html', {'title':'index'})
+		return render(request, 'user/index.html', {'title':'index'})
+	except:
+		return render(request, 'user/index.html', {'title':'index'})
+	# else:
+	# 	return HttpResponse('We are currently working on this page. Please visit later')
 
 ########### register here #####################################
 def register(request):
@@ -80,24 +91,32 @@ def Login(request):
 	form = AuthenticationForm()
 	return render(request, 'user/login.html', {'form':form, 'title':'log in'})
 
-# def khoj_view(request):
-#     if request.method == 'POST':
-#         form = khojForm(request.POST)
-        
-#         input_value = request.POST('input_value')
-#         search_value = request.POST('search_value')
-#         print('++++++++++++++++++++++')
-#         print(input_value)
-#         return HttpResponse(input_value)
-    # if request.method == 'POST':
-    #     input_value = request.POST.get['input_value']
-    #     search_value = request.POST.get['search_value']
-    #     form = khojForm(request.POST)
-    #     if form.is_valid():
-    #         pass  # does nothing, just trigger the validation
-    # else:
-    #     form = khojForm()
-    # return render(request, 'index.html', {'form': form})
-    # form = khojForm()
-    # return render(request, 'user/khoj.html', {'form':form, 'title':'khoj'})
+
+from rest_framework.decorators import api_view, renderer_classes
+from rest_framework.renderers import JSONRenderer, TemplateHTMLRenderer
+
+@api_view(('GET',))
+# @renderer_classes((TemplateHTMLRenderer, JSONRenderer))
+def api_view(request):
+	if request.method == 'GET':
+		user_id = request.user.id
+		start_datetime = Value.objects.filter().order_by('-created_at')[0].created_at
+		start_input_value = Value.objects.filter().order_by('-created_at')[0].input_value
+		end_datetime = Value.objects.filter().order_by('created_at')[0].created_at
+		end_input_value = Value.objects.filter().order_by('created_at')[0].input_value
+
+		return JsonResponse(
+                    {
+						"status": "success",
+						"user_id": user_id, 
+						"payload": {
+							"timestamp": start_datetime, 
+							"input_value": start_input_value,
+							"timestamp1": end_datetime,
+							"input_value1": end_input_value,
+						},
+					},			
+                    
+                    	status=status.HTTP_200_OK, 
+                )
 
