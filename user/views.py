@@ -3,26 +3,33 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
-from .forms import UserRegisterForm
+from .forms import *
 from django.core.mail import send_mail
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import get_template
 from django.template import Context
 from django.http import HttpResponse
-# from .models import Value
-
+from .models import *
 def index(request):
-    # if request.method == 'POST':
-        # form = khojForm(request.POST)
-        
-    input_value = request.POST.get('input_value')
-    search_value = request.POST.get('search_value')
-    print('++++++++++++++++++++++')
-    print(type(input_value))
-    # return HttpResponse(input_value)
-    return render(request, 'user/index.html', {'title':'index'})
-    # else:
-    #     return HttpResponse('hello')
+
+	input_value = request.POST['input_value']
+	search_value = request.POST['search_value']
+	# input_db = Value(input_value='input_value', search_value='search_value')
+	# is_existing_value = Value.objects.all().delete()
+	is_existing_value = Value.objects.all().exists()
+	if is_existing_value:
+		Value.objects.update(input_value = input_value, search_value = search_value)
+	# if is_existing_value:
+	# 	input_db.update(input_value = 'input_value', search_value = 'search_value')
+	else:
+		input_db = Value(input_value=input_value, search_value=search_value)
+		input_db.save()
+	# input_db.save()
+	print(Value.objects.filter().values().first()['input_value'])
+	print(Value.objects.all())
+	print(input_value)
+
+	return render(request, 'user/index.html', {'title':'index'})
 
 ########### register here #####################################
 def register(request):
